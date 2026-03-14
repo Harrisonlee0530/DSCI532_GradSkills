@@ -20,7 +20,7 @@ The dashboard reimplements the filters, summary statistics and a bar chart from 
 
 The deployed application can be accessed here:
 
-**Dashboard:**
+**Dashboard:** [https://019ceb6b-8bac-9264-516a-99039dd843ac.share.connect.posit.cloud/](https://019ceb6b-8bac-9264-516a-99039dd843ac.share.connect.posit.cloud/)
 
 
 ---
