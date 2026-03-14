@@ -1,8 +1,9 @@
 library(shiny)
+library(bslib)
 library(tidyverse)
 
 # Load data
-data <- read_csv("data/processed/processed_data.csv")
+data <- read_csv("../data/processed/processed_data.csv")
 
 regions <- data$Region |> unique() |> sort()
 countries <- data$Country |> unique() |> sort()
@@ -14,39 +15,59 @@ min_year <- min(data$Graduation_Year)
 max_year <- max(data$Graduation_Year)
 
 ui <- fluidPage(
-  titlePanel("Graduate Employability Dashboard (R Version)"),
+  titlePanel("Graduate Employability Dashboard"),
+  theme = bs_theme(version = 5), 
   sidebarLayout(
     sidebarPanel(
-      checkboxGroupInput(
-        "region",
-        "Region",
-        choices = regions,
-        selected = regions
+      accordion(
+        accordion_panel(
+          "Region",
+          checkboxGroupInput(
+            "region",
+            NULL,
+            choices = regions,
+            selected = regions
+          )
+        ),
+        accordion_panel(
+          "Country",
+          checkboxGroupInput(
+            "country",
+            NULL,
+            choices = countries,
+            selected = countries
+          )
+        ),
+        accordion_panel(
+          "Field of Study",
+          checkboxGroupInput(
+            "study",
+            NULL,
+            choices = studies,
+            selected = studies
+          )
+        ),
+        accordion_panel(
+          "Degree Level",
+          checkboxGroupInput(
+            "degree",
+            NULL,
+            choices = degrees,
+            selected = degrees
+          )
+        ),
+        accordion_panel(
+          "Industry",
+          checkboxGroupInput(
+            "industry",
+            NULL,
+            choices = industries,
+            selected = industries
+          )
+        ),
+        open = FALSE
       ),
-      checkboxGroupInput(
-        "country",
-        "Country",
-        choices = countries,
-        selected = countries
-      ),
-      checkboxGroupInput(
-        "study",
-        "Field of Study",
-        choices = studies,
-        selected = studies
-      ),
-      checkboxGroupInput(
-        "degree",
-        "Degree Level",
-        choices = degrees,
-        selected = degrees
-      ),
-      checkboxGroupInput(
-        "industry",
-        "Industry",
-        choices = industries,
-        selected = industries
-      ),
+      
       sliderInput(
         "grad_year",
         "Graduation Year",
@@ -57,7 +78,22 @@ ui <- fluidPage(
         sep = ""
       )
     ),
+    
     mainPanel(
+      layout_columns(
+        card(
+          card_header("Employment Rate (6 months)"),
+          uiOutput("emp6_card")
+        ),
+        card(
+          card_header("Employment Rate (12 months)"),
+          uiOutput("emp12_card")
+        ),
+        card(
+          card_header("Starting Salary"),
+          uiOutput("salary_card")
+        )
+      ),
       plotOutput("industry_bar", height = "500px")
     )
   )
@@ -78,6 +114,34 @@ server <- function(input, output, session) {
       )
   })
   
+  summary_stats <- function(x) {
+    paste0(
+      "Average: ", 
+        round(mean(x, na.rm = TRUE), 1), "<br>",
+      "Bottom 25%: ", 
+        round(quantile(x, 0.25, na.rm = TRUE), 1), "<br>",
+      "Median: ", 
+        round(median(x, na.rm = TRUE), 1), "<br>",
+      "Top 25%: ", 
+        round(quantile(x, 0.75, na.rm = TRUE), 1)
+    )
+  }
+  
+  output$emp6_card <- renderUI({
+    df <- filtered_data()
+    HTML(summary_stats(df$`Employment_Rate_6_Months (%)`))
+  })
+  
+  output$emp12_card <- renderUI({
+    df <- filtered_data()
+    HTML(summary_stats(df$`Employment_Rate_12_Months (%)`))
+  })
+  
+  output$salary_card <- renderUI({
+    df <- filtered_data()
+    HTML(summary_stats(df$Average_Starting_Salary_USD))
+  })
+  
   # Bar chart
   output$industry_bar <- renderPlot({
     df <- filtered_data()
@@ -94,7 +158,6 @@ server <- function(input, output, session) {
       aes(
         x = reorder(Top_Industry, avg_salary),
         y = avg_salary,
-        fill = Top_Industry
       )
     ) + 
       geom_col() +
