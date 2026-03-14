@@ -40,7 +40,7 @@ The deployed application can be accessed here:
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.ubc.ca/hli76/DSCI532_GradSkills
+git clone git@github.com:Harrisonlee0530/DSCI532_GradSkills.git
 cd DSCI532_GradSkills
 ```
 
